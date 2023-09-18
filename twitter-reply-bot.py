@@ -17,7 +17,7 @@ TWITTER_API_SECRET = os.getenv("TWITTER_API_SECRET", "YourKey")
 TWITTER_ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN", "YourKey")
 TWITTER_ACCESS_TOKEN_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET", "YourKey")
 TWITTER_BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN", "YourKey")
-
+# Check for all new mentions and it already responded
 AIRTABLE_API_KEY = os.getenv("AIRTABLE_API_KEY", "YourKey")
 AIRTABLE_BASE_KEY = os.getenv("AIRTABLE_BASE_KEY", "YourKey")
 AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME", "YourKey")
@@ -33,6 +33,8 @@ class TwitterBot:
                                          access_token=TWITTER_ACCESS_TOKEN,
                                          access_token_secret=TWITTER_ACCESS_TOKEN_SECRET,
                                          wait_on_rate_limit=True)
+        self.auth = tweepy.OAuth1UserHandler(TWITTER_API_KEY,TWITTER_API_SECRET,TWITTER_ACCESS_TOKEN,TWITTER_ACCESS_TOKEN_SECRET)
+        self.api = tweepy.API(self.auth)
 
         self.airtable = Airtable(AIRTABLE_BASE_KEY, AIRTABLE_TABLE_NAME, AIRTABLE_API_KEY)
         self.twitter_me_id = self.get_me_id()
@@ -155,7 +157,7 @@ class TwitterBot:
 
         # If no mentions, just return
         if not mentions:
-            print("No mentions found NULL")
+            print("No mentions found")
             return
         
         self.mentions_found = len(mentions)
@@ -177,15 +179,14 @@ class TwitterBot:
         self.respond_to_mentions()
         print (f"Finished Job: {datetime.utcnow().isoformat()}, Found: {self.mentions_found}, Replied: {self.mentions_replied}, Errors: {self.mentions_replied_errors}")
 
-# The job that we'll schedule to run every X minutes
 def job():
     print(f"Job executed at {datetime.utcnow().isoformat()}")
     bot = TwitterBot()
     bot.execute_replies()
 
 if __name__ == "__main__":
-    # Schedule the job to run every 5 minutes. Edit to your liking, but watch out for rate limits
-    schedule.every(6).minutes.do(job)
+    # Schedule the job to run every 5 minutes.
+    schedule.every(3).minutes.do(job)
     while True:
         schedule.run_pending()
         time.sleep(1)
